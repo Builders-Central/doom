@@ -1,772 +1,1039 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Doom-Like Game</title>
     <style>
-        body { margin: 0; overflow: hidden; background: black; }
-        canvas { width: 100vw; height: 100vh; }
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: black;
+      }
+      canvas {
+        width: 100vw;
+        height: 100vh;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <canvas id="gameCanvas"></canvas>
     <script>
-        const canvas = document.getElementById("gameCanvas");
-        const ctx = canvas.getContext("2d");
+      const canvas = document.getElementById("gameCanvas");
+      const ctx = canvas.getContext("2d");
 
-        // Set canvas size to window size
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+      // Set canvas size to window size
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
 
-        // Modify the map to be larger and more interesting
-        const map = [
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-            [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1],
-            [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1],
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
-            [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-            [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
-            [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-        ];
+      // Modify the map to be larger and more interesting
+      const map = [
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1],
+        [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+        [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      ];
 
-        // Update map dimensions
-        const mapWidth = map[0].length;
-        const mapHeight = map.length;
+      // Update map dimensions
+      const mapWidth = map[0].length;
+      const mapHeight = map.length;
 
-        // Update player starting position
-        let player = {
-            x: 2,
-            y: 2,
-            angle: 0,
-            fov: Math.PI / 3,
-            health: 100
-        };
+      // Update player starting position
+      let player = {
+        x: 2,
+        y: 2,
+        angle: 0,
+        fov: Math.PI / 3,
+        health: 100,
+      };
 
-        // Add more enemies with different positions and behaviors
-        let enemies = [
-            { x: 4, y: 4, health: 50, alive: true, shootCooldown: 0, type: 'soldier' },
-            { x: 13, y: 2, health: 50, alive: true, shootCooldown: 0, type: 'soldier' },
-            { x: 7, y: 5, health: 75, alive: true, shootCooldown: 0, type: 'heavy' },
-            { x: 2, y: 8, health: 50, alive: true, shootCooldown: 0, type: 'soldier' },
-            { x: 13, y: 8, health: 75, alive: true, shootCooldown: 0, type: 'heavy' },
-            { x: 7, y: 9, health: 50, alive: true, shootCooldown: 0, type: 'soldier' }
-        ];
+      // Add more enemies with different positions and behaviors
+      let enemies = [
+        {
+          x: 4,
+          y: 4,
+          health: 50,
+          alive: true,
+          shootCooldown: 0,
+          type: "soldier",
+        },
+        {
+          x: 13,
+          y: 2,
+          health: 50,
+          alive: true,
+          shootCooldown: 0,
+          type: "soldier",
+        },
+        {
+          x: 7,
+          y: 5,
+          health: 75,
+          alive: true,
+          shootCooldown: 0,
+          type: "heavy",
+        },
+        {
+          x: 2,
+          y: 8,
+          health: 50,
+          alive: true,
+          shootCooldown: 0,
+          type: "soldier",
+        },
+        {
+          x: 13,
+          y: 8,
+          health: 75,
+          alive: true,
+          shootCooldown: 0,
+          type: "heavy",
+        },
+        {
+          x: 7,
+          y: 9,
+          health: 50,
+          alive: true,
+          shootCooldown: 0,
+          type: "soldier",
+        },
+      ];
 
-        // Projectiles array
-        let projectiles = [];
+      // Projectiles array
+      let projectiles = [];
 
-        // Add this after the player object definition
-        const speeds = {
-            player: {
-                base: {
-                    move: 0.08,
-                    strafe: 0.08,
-                    rotation: 0.04
-                },
-                running: {
-                    move: 0.12,
-                    strafe: 0.10,
-                    rotation: 0.03
-                }
-            },
-            enemy: {
-                soldier: {
-                    move: 0.04,
-                    projectile: 0.2
-                },
-                heavy: {
-                    move: 0.025,
-                    projectile: 0.15
-                }
-            },
-            projectile: {
-                base: 0.2,
-                heavy: 0.15
-            }
-        };
+      // Add this after the player object definition
+      const speeds = {
+        player: {
+          base: {
+            move: 0.04,
+            strafe: 0.04,
+            rotation: 0.04,
+          },
+          running: {
+            move: 0.06,
+            strafe: 0.05,
+            rotation: 0.03,
+          },
+        },
+        enemy: {
+          soldier: {
+            move: 0.02,
+            projectile: 0.15,
+          },
+          heavy: {
+            move: 0.015,
+            projectile: 0.1,
+          },
+        },
+        projectile: {
+          base: 0.15,
+          heavy: 0.1,
+        },
+      };
 
-        // Adjust game settings for the larger map
-        const moveSpeed = 0.08; // Slightly faster movement
-        const rotSpeed = 0.04;
-        const strafeSpeed = 0.08;
-        const enemySpeed = 0.03; // Slightly faster enemies
-        const projectileSpeed = 0.2;
-        const screenWidth = canvas.width;
-        const screenHeight = canvas.height;
-        const rayCount = screenWidth / 2;
-        const tileSize = 15; // Moved this up from bottom
+      // Adjust game settings for the larger map
+      const moveSpeed = 0.08; // Slightly faster movement
+      const rotSpeed = 0.04;
+      const strafeSpeed = 0.08;
+      const enemySpeed = 0.03; // Slightly faster enemies
+      const projectileSpeed = 0.2;
+      const screenWidth = canvas.width;
+      const screenHeight = canvas.height;
+      const rayCount = screenWidth / 2;
+      const tileSize = 15; // Moved this up from bottom
 
-        // Keyboard controls
-        const keys = {};
-        document.addEventListener("keydown", (e) => {
-            // Handle both left and right shift keys
-            if (e.key === "Shift" || e.key === "ShiftLeft" || e.key === "ShiftRight") {
-                keys["Shift"] = true;
-            } else {
-                keys[e.key.toLowerCase()] = true; // Convert all keys to lowercase
-            }
-        });
-        document.addEventListener("keyup", (e) => {
-            if (e.key === "Shift" || e.key === "ShiftLeft" || e.key === "ShiftRight") {
-                keys["Shift"] = false;
-            } else {
-                keys[e.key.toLowerCase()] = false; // Convert all keys to lowercase
-            }
-        });
-
-        // Mouse click to shoot
-        let shotFired = false;
-        document.addEventListener("click", () => shotFired = true);
-
-        // Add this after your existing constants
-        const TEXTURE_SIZE = 64;
-        const textures = {
-            wall: new Image(),
-            enemy: new Image(),
-            weaponIdle: new Image(),
-            weaponRunning: new Image(),
-            weaponShooting: new Image(),
-            explosion: new Image(),
-            isLoaded: false
-        };
-
-        // Create a simple wall texture using canvas (temporary solution)
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = TEXTURE_SIZE;
-        tempCanvas.height = TEXTURE_SIZE;
-        const tempCtx = tempCanvas.getContext('2d');
-
-        // Create a basic brick pattern
-        tempCtx.fillStyle = '#8B4513'; // Dark brown
-        tempCtx.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE);
-        tempCtx.strokeStyle = '#654321'; // Darker brown for brick lines
-        tempCtx.lineWidth = 2;
-
-        // Draw brick pattern
-        for (let y = 0; y < TEXTURE_SIZE; y += 16) {
-            for (let x = 0; x < TEXTURE_SIZE; x += 32) {
-                tempCtx.strokeRect(x + (y % 32 === 0 ? 0 : 16), y, 32, 16);
-            }
+      // Keyboard controls
+      const keys = {};
+      document.addEventListener("keydown", (e) => {
+        // Handle both left and right shift keys
+        if (
+          e.key === "Shift" ||
+          e.key === "ShiftLeft" ||
+          e.key === "ShiftRight"
+        ) {
+          keys["Shift"] = true;
+        } else {
+          keys[e.key.toLowerCase()] = true; // Convert all keys to lowercase
         }
-
-        // Load both textures
-        textures.wall.src = tempCanvas.toDataURL();
-        textures.enemy.src = 'assets/enemy.png';
-
-        // Update the texture loading logic to wait for both textures
-        let texturesLoaded = 0;
-        const totalTextures = 6;
-
-        function handleTextureLoad() {
-            texturesLoaded++;
-            if (texturesLoaded === totalTextures) {
-                textures.isLoaded = true;
-                console.log('All textures loaded successfully');
-            }
+      });
+      document.addEventListener("keyup", (e) => {
+        if (
+          e.key === "Shift" ||
+          e.key === "ShiftLeft" ||
+          e.key === "ShiftRight"
+        ) {
+          keys["Shift"] = false;
+        } else {
+          keys[e.key.toLowerCase()] = false; // Convert all keys to lowercase
         }
+      });
 
-        textures.wall.onload = handleTextureLoad;
-        textures.enemy.onload = handleTextureLoad;
-        textures.wall.onerror = (err) => console.error('Error loading wall texture:', err);
-        textures.enemy.onerror = (err) => console.error('Error loading enemy texture:', err);
+      // Mouse click to shoot
+      let shotFired = false;
+      document.addEventListener("click", () => (shotFired = true));
 
-        // Load all weapon textures
-        textures.weaponIdle.src = 'assets/shooting.png';     // Use as idle state
-        textures.weaponRunning.src = 'assets/running.png';
-        textures.weaponShooting.src = 'assets/shooting.png';
-        textures.explosion.src = 'assets/explosion_gif.gif';
+      // Add this after your existing constants
+      const TEXTURE_SIZE = 64;
+      const textures = {
+        wall: new Image(),
+        enemy: new Image(),
+        weaponIdle: new Image(),
+        weaponRunning: new Image(),
+        weaponShooting: new Image(),
+        explosion: new Image(),
+        isLoaded: false,
+      };
 
-        // Add weapon state to track animations
-        let weaponState = {
-            current: 'idle',
-            shootingFrame: 0,
-            runningFrame: 0,
-            explosionFrame: 0,
-            lastShot: 0
-        };
+      // Create a simple wall texture using canvas (temporary solution)
+      const tempCanvas = document.createElement("canvas");
+      tempCanvas.width = TEXTURE_SIZE;
+      tempCanvas.height = TEXTURE_SIZE;
+      const tempCtx = tempCanvas.getContext("2d");
 
-        // Start the game loop immediately
-        gameLoop();
+      // Create a basic brick pattern
+      tempCtx.fillStyle = "#8B4513"; // Dark brown
+      tempCtx.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE);
+      tempCtx.strokeStyle = "#654321"; // Darker brown for brick lines
+      tempCtx.lineWidth = 2;
 
-        // Check if position is valid
-        function canMove(x, y) {
-            return x >= 0 && x < mapWidth && y >= 0 && y < mapHeight && map[Math.floor(y)][Math.floor(x)] === 0;
+      // Draw brick pattern
+      for (let y = 0; y < TEXTURE_SIZE; y += 16) {
+        for (let x = 0; x < TEXTURE_SIZE; x += 32) {
+          tempCtx.strokeRect(x + (y % 32 === 0 ? 0 : 16), y, 32, 16);
         }
+      }
 
-        // Raycasting with enemy rendering
-        function castRays() {
-            const enemyDistances = [];
-            for (let i = 0; i < rayCount; i++) {
-                const rayAngle = player.angle - player.fov / 2 + (player.fov * i / rayCount);
-                let distance = 0;
-                let hit = false;
-                let rayX = player.x;
-                let rayY = player.y;
-                let hitX = 0; // Where exactly on the wall we hit
+      // Load both textures
+      textures.wall.src = tempCanvas.toDataURL();
+      textures.enemy.src = "assets/enemy.png";
 
-                const deltaX = Math.cos(rayAngle);
-                const deltaY = Math.sin(rayAngle);
+      // Update the texture loading logic to wait for both textures
+      let texturesLoaded = 0;
+      const totalTextures = 6;
 
-                while (!hit && distance < 20) {
-                    distance += 0.05;
-                    rayX = player.x + deltaX * distance;
-                    rayY = player.y + deltaY * distance;
-
-                    if (rayX < 0 || rayX >= mapWidth || rayY < 0 || rayY >= mapHeight) {
-                        hit = true;
-                    } else if (map[Math.floor(rayY)][Math.floor(rayX)] === 1) {
-                        hit = true;
-                        // Calculate exact hit position for texture mapping
-                        hitX = (rayX % 1);
-                        if (Math.abs(rayY - Math.floor(rayY)) < 0.01) {
-                            hitX = rayX % 1;
-                        } else {
-                            hitX = rayY % 1;
-                        }
-                    }
-                }
-
-                const correctedDistance = distance * Math.cos(rayAngle - player.angle);
-                const wallHeight = (screenHeight / correctedDistance) * 1.5;
-                const wallTop = (screenHeight - wallHeight) / 2;
-                const wallBottom = wallTop + wallHeight;
-
-                // Draw wall slice with fallback
-                if (textures.isLoaded) {
-                    const textureX = Math.floor(hitX * TEXTURE_SIZE);
-                    ctx.drawImage(
-                        textures.wall,
-                        textureX, 0,
-                        1, TEXTURE_SIZE,
-                        i * 2, wallTop,
-                        2, wallHeight
-                    );
-                } else {
-                    // Fallback rendering with color gradient
-                    const shade = Math.min(255, Math.floor(255 - distance * 20));
-                    ctx.fillStyle = `rgb(${shade}, ${Math.floor(shade * 0.8)}, ${Math.floor(shade * 0.6)})`;
-                    ctx.fillRect(i * 2, wallTop, 2, wallHeight);
-                }
-
-                // Draw floor and ceiling
-                ctx.fillStyle = "#333";
-                ctx.fillRect(i * 2, wallBottom, 2, screenHeight - wallBottom);
-                ctx.fillStyle = "#555";
-                ctx.fillRect(i * 2, 0, 2, wallTop);
-
-                enemies.forEach(enemy => {
-                    if (!enemy.alive) return;
-                    const enemyAngle = Math.atan2(enemy.y - player.y, enemy.x - player.x);
-                    const angleDiff = Math.abs(enemyAngle - rayAngle);
-                    if (angleDiff < 0.02) {
-                        const enemyDistance = Math.sqrt((enemy.x - player.x) ** 2 + (enemy.y - player.y) ** 2);
-                        if (enemyDistance < distance) {
-                            enemyDistances.push({ enemy, distance: enemyDistance, ray: i });
-                        }
-                    }
-                });
-            }
-
-            enemyDistances.sort((a, b) => b.distance - a.distance);
-            enemyDistances.forEach(({ enemy, distance, ray }) => {
-                const spriteHeight = (screenHeight / distance) * 1.5;
-                const spriteWidth = spriteHeight * 0.75;
-                const spriteX = ray * 2 - spriteWidth / 2;
-                const spriteY = (screenHeight - spriteHeight) / 2;
-                
-                if (textures.isLoaded) {
-                    // Draw the enemy sprite
-                    ctx.drawImage(
-                        textures.enemy,
-                        0, 0,                    // Source X, Y
-                        textures.enemy.width, textures.enemy.height,  // Source width, height
-                        spriteX, spriteY,        // Destination X, Y
-                        spriteWidth, spriteHeight // Destination width, height
-                    );
-                } else {
-                    // Fallback to rectangle if texture not loaded
-                    ctx.fillStyle = "#ff00ff";
-                    ctx.fillRect(spriteX, spriteY, spriteWidth, spriteHeight);
-                }
-            });
-
-            projectiles.forEach(p => {
-                const pAngle = Math.atan2(p.y - player.y, p.x - player.x);
-                const angleDiff = Math.abs(pAngle - player.angle);
-                if (angleDiff < player.fov / 2) {
-                    const pDistance = Math.sqrt((p.x - player.x) ** 2 + (p.y - player.y) ** 2);
-                    const ray = rayCount * (0.5 + (pAngle - player.angle) / player.fov);
-                    const pHeight = (screenHeight / pDistance) * 0.3;
-                    const pWidth = pHeight;
-                    const pX = ray * 2 - pWidth / 2;
-                    const pY = (screenHeight - pHeight) / 2;
-                    ctx.fillStyle = "orange";
-                    ctx.fillRect(pX, pY, pWidth, pHeight);
-                }
-            });
+      function handleTextureLoad() {
+        texturesLoaded++;
+        if (texturesLoaded === totalTextures) {
+          textures.isLoaded = true;
+          console.log("All textures loaded successfully");
         }
+      }
 
-        // Update player movement
-        function updatePlayer() {
-            if (player.health <= 0) return; // Don't move if dead
-            
-            const isRunning = keys["shift"]; // Check for shift key
-            const currentSpeeds = isRunning ? speeds.player.running : speeds.player.base;
-            
-            const cos = Math.cos(player.angle);
-            const sin = Math.sin(player.angle);
+      textures.wall.onload = handleTextureLoad;
+      textures.enemy.onload = handleTextureLoad;
+      textures.wall.onerror = (err) =>
+        console.error("Error loading wall texture:", err);
+      textures.enemy.onerror = (err) =>
+        console.error("Error loading enemy texture:", err);
 
-            // Forward/Backward with momentum
-            if (keys["w"] || keys["arrowup"]) {
-                const newX = player.x + cos * currentSpeeds.move;
-                const newY = player.y + sin * currentSpeeds.move;
-                // Try to slide along walls when hitting them
-                if (canMove(newX, player.y)) player.x = newX;
-                if (canMove(player.x, newY)) player.y = newY;
+      // Load all weapon textures
+      textures.weaponIdle.src = "assets/shooting.png"; // Use as idle state
+      textures.weaponRunning.src = "assets/running.png";
+      textures.weaponShooting.src = "assets/shooting.png";
+      textures.explosion.src = "assets/explosion_gif.gif";
+
+      // Add weapon state to track animations
+      let weaponState = {
+        current: "idle",
+        shootingFrame: 0,
+        runningFrame: 0,
+        explosionFrame: 0,
+        lastShot: 0,
+      };
+
+      // Add this after the textures declaration
+      const sounds = {
+        bulletShot: new Audio("audio/bullet_shot.mp3"),
+        damage: new Audio("audio/damage.mp3"),
+      };
+
+      // Add this after the player object definition
+      let damageFlashIntensity = 0; // Controls the opacity of the red flash
+
+      // Start the game loop immediately
+      gameLoop();
+
+      // Check if position is valid
+      function canMove(x, y) {
+        return (
+          x >= 0 &&
+          x < mapWidth &&
+          y >= 0 &&
+          y < mapHeight &&
+          map[Math.floor(y)][Math.floor(x)] === 0
+        );
+      }
+
+      // Raycasting with enemy rendering
+      function castRays() {
+        const enemyDistances = [];
+        for (let i = 0; i < rayCount; i++) {
+          const rayAngle =
+            player.angle - player.fov / 2 + (player.fov * i) / rayCount;
+          let distance = 0;
+          let hit = false;
+          let rayX = player.x;
+          let rayY = player.y;
+          let hitX = 0; // Where exactly on the wall we hit
+
+          const deltaX = Math.cos(rayAngle);
+          const deltaY = Math.sin(rayAngle);
+
+          while (!hit && distance < 20) {
+            distance += 0.05;
+            rayX = player.x + deltaX * distance;
+            rayY = player.y + deltaY * distance;
+
+            if (rayX < 0 || rayX >= mapWidth || rayY < 0 || rayY >= mapHeight) {
+              hit = true;
+            } else if (map[Math.floor(rayY)][Math.floor(rayX)] === 1) {
+              hit = true;
+              // Calculate exact hit position for texture mapping
+              hitX = rayX % 1;
+              if (Math.abs(rayY - Math.floor(rayY)) < 0.01) {
+                hitX = rayX % 1;
+              } else {
+                hitX = rayY % 1;
+              }
             }
-            if (keys["s"] || keys["arrowdown"]) {
-                const newX = player.x - cos * (currentSpeeds.move * 0.7); // Slower backward movement
-                const newY = player.y - sin * (currentSpeeds.move * 0.7);
-                if (canMove(newX, player.y)) player.x = newX;
-                if (canMove(player.x, newY)) player.y = newY;
-            }
+          }
 
-            // Strafe left/right
-            if (keys["q"] || keys["arrowleft"]) {
-                const newX = player.x - sin * currentSpeeds.strafe;
-                const newY = player.y + cos * currentSpeeds.strafe;
-                if (canMove(newX, player.y)) player.x = newX;
-                if (canMove(player.x, newY)) player.y = newY;
-            }
-            if (keys["e"] || keys["arrowright"]) {
-                const newX = player.x + sin * currentSpeeds.strafe;
-                const newY = player.y - cos * currentSpeeds.strafe;
-                if (canMove(newX, player.y)) player.x = newX;
-                if (canMove(player.x, newY)) player.y = newY;
-            }
+          const correctedDistance =
+            distance * Math.cos(rayAngle - player.angle);
+          const wallHeight = (screenHeight / correctedDistance) * 1.5;
+          const wallTop = (screenHeight - wallHeight) / 2;
+          const wallBottom = wallTop + wallHeight;
 
-            // Rotation with smooth turning
-            if (keys["a"]) player.angle -= currentSpeeds.rotation;
-            if (keys["d"]) player.angle += currentSpeeds.rotation;
-        }
-
-        // Add this function before updateEnemies
-        function hasLineOfSight(fromX, fromY, toX, toY) {
-            const dx = toX - fromX;
-            const dy = toY - fromY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            const stepX = dx / distance;
-            const stepY = dy / distance;
-            
-            let currentX = fromX;
-            let currentY = fromY;
-            
-            // Check for walls along the line of sight
-            for (let step = 0; step < distance; step += 0.1) {
-                currentX = fromX + stepX * step;
-                currentY = fromY + stepY * step;
-                
-                // If we hit a wall, there's no line of sight
-                if (map[Math.floor(currentY)][Math.floor(currentX)] === 1) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        // Update enemies and shooting
-        function updateEnemies() {
-            enemies.forEach(enemy => {
-                if (!enemy.alive) return;
-
-                const dx = player.x - enemy.x;
-                const dy = player.y - enemy.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                const enemySpeed = speeds.enemy[enemy.type].move;
-                const projectileSpeed = speeds.enemy[enemy.type].projectile;
-
-                // Different behavior based on enemy type
-                if (enemy.type === 'soldier') {
-                    // Soldiers try to maintain medium distance
-                    if (distance > 3 || distance < 2) {
-                        const moveX = enemy.x + (dx / distance) * enemySpeed;
-                        const moveY = enemy.y + (dy / distance) * enemySpeed;
-                        if (canMove(moveX, moveY)) {
-                            enemy.x = moveX;
-                            enemy.y = moveY;
-                        }
-                    }
-                    // Shoot more frequently, but only if there's line of sight
-                    if (enemy.shootCooldown <= 0 && distance < 6 && hasLineOfSight(enemy.x, enemy.y, player.x, player.y)) {
-                        const angleToPlayer = Math.atan2(dy, dx);
-                        projectiles.push({
-                            x: enemy.x,
-                            y: enemy.y,
-                            dx: Math.cos(angleToPlayer) * projectileSpeed,
-                            dy: Math.sin(angleToPlayer) * projectileSpeed,
-                            damage: 10,
-                            type: 'soldier'
-                        });
-                        enemy.shootCooldown = 45;
-                    }
-                } else if (enemy.type === 'heavy') {
-                    // Heavy enemies are slower but more aggressive
-                    if (distance > 2) {
-                        const moveX = enemy.x + (dx / distance) * enemySpeed;
-                        const moveY = enemy.y + (dy / distance) * enemySpeed;
-                        if (canMove(moveX, moveY)) {
-                            enemy.x = moveX;
-                            enemy.y = moveY;
-                        }
-                    }
-                    // Shoot less frequently but does more damage, only with line of sight
-                    if (enemy.shootCooldown <= 0 && distance < 7 && hasLineOfSight(enemy.x, enemy.y, player.x, player.y)) {
-                        const angleToPlayer = Math.atan2(dy, dx);
-                        projectiles.push({
-                            x: enemy.x,
-                            y: enemy.y,
-                            dx: Math.cos(angleToPlayer) * projectileSpeed,
-                            dy: Math.sin(angleToPlayer) * projectileSpeed,
-                            damage: 20,
-                            type: 'heavy'
-                        });
-                        enemy.shootCooldown = 90;
-                    }
-                }
-
-                enemy.shootCooldown--;
-            });
-
-            // Update projectiles with type-based speeds
-            projectiles = projectiles.filter(p => {
-                p.x += p.dx;
-                p.y += p.dy;
-
-                const distToPlayer = Math.sqrt((p.x - player.x) ** 2 + (p.y - player.y) ** 2);
-                if (distToPlayer < 0.2 && player.health > 0) {
-                    player.health -= p.damage;
-                    if (player.health <= 0) player.health = 0;
-                    return false;
-                }
-
-                return canMove(p.x, p.y) && p.x >= 0 && p.x < mapWidth && p.y >= 0 && p.y < mapHeight;
-            });
-        }
-
-        // Player shooting
-        function shoot() {
-            if (shotFired && player.health > 0) {  // Only allow shooting if player is alive
-                // Visual feedback for shooting
-                ctx.fillStyle = "yellow";
-                ctx.fillRect(screenWidth / 2 - 40, screenHeight - 120, 80, 40);
-                ctx.fillStyle = "white";
-                ctx.font = "20px Arial";
-                ctx.fillText("FIRE!", screenWidth / 2 - 25, screenHeight - 90);
-
-                let rayX = player.x;
-                let rayY = player.y;
-                const deltaX = Math.cos(player.angle);
-                const deltaY = Math.sin(player.angle);
-                let hit = false;
-                let rayStep = 0.1;  // Smaller step size for more precise hit detection
-                let maxRange = 20;  // Maximum shooting range
-
-                // Shoot ray from player position
-                for (let dist = 0; dist < maxRange && !hit; dist += rayStep) {
-                    rayX = player.x + deltaX * dist;
-                    rayY = player.y + deltaY * dist;
-
-                    // Check for wall collision first
-                    if (map[Math.floor(rayY)][Math.floor(rayX)] === 1) {
-                        break;  // Hit a wall, stop checking
-                    }
-
-                    // Check for enemy hits
-                    enemies.forEach(enemy => {
-                        if (!enemy.alive) return;
-                        
-                        // Calculate distance to enemy
-                        const dx = enemy.x - rayX;
-                        const dy = enemy.y - rayY;
-                        const distToEnemy = Math.sqrt(dx * dx + dy * dy);
-                        
-                        // Increased hit box slightly for better hit detection
-                        if (distToEnemy < 0.5) {  // Increased from 0.3 to 0.5
-                            // Hit an enemy!
-                            enemy.health -= 50;
-                            if (enemy.health <= 0) {
-                                enemy.alive = false;
-                                console.log('Enemy killed!');  // Debug message
-                            } else {
-                                console.log('Enemy hit! Health:', enemy.health);  // Debug message
-                            }
-                            hit = true;
-
-                            // Visual feedback for hit
-                            ctx.fillStyle = "red";
-                            const spriteHeight = (screenHeight / distToEnemy) * 1.5;
-                            const spriteWidth = spriteHeight * 0.75;
-                            const spriteX = (rayCount / 2) * 2 - spriteWidth / 2;
-                            const spriteY = (screenHeight - spriteHeight) / 2;
-                            ctx.fillRect(spriteX, spriteY, spriteWidth, spriteHeight);
-                        }
-                    });
-                }
-
-                // Draw the bullet trail for visual feedback
-                ctx.strokeStyle = 'yellow';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(screenWidth / 2, screenHeight - 100);  // Start from weapon position
-                ctx.lineTo(screenWidth / 2 + (hit ? 0 : 50), screenHeight - 150);  // Show trajectory
-                ctx.stroke();
-
-                // Weapon state update
-                weaponState.current = 'shooting';
-                weaponState.shootingFrame = 10;
-                weaponState.lastShot = Date.now();
-
-                shotFired = false;
-            }
-        }
-
-        // Draw HUD
-        function drawHUD() {
-            // Draw mini-map on the left
-            const mapScale = 1; // Adjust this value to change mini-map size
-            const mapPadding = 10; // Space from the edge of the screen
-            
-            // Draw map background
-            ctx.fillStyle = "rgba(0, 0, 0, 0.5)"; // Semi-transparent background
-            ctx.fillRect(mapPadding, mapPadding, mapWidth * tileSize * mapScale, mapHeight * tileSize * mapScale);
-            
-            // Draw map walls and spaces
-            for (let y = 0; y < mapHeight; y++) {
-                for (let x = 0; x < mapWidth; x++) {
-                    ctx.fillStyle = map[y][x] === 1 ? "#000" : "#fff";
-                    ctx.fillRect(
-                        x * tileSize * mapScale + mapPadding,
-                        y * tileSize * mapScale + mapPadding,
-                        tileSize * mapScale,
-                        tileSize * mapScale
-                    );
-                }
-            }
-
-            // Draw player on mini-map
-            ctx.fillStyle = "red";
-            ctx.fillRect(
-                player.x * tileSize * mapScale - 2 + mapPadding,
-                player.y * tileSize * mapScale - 2 + mapPadding,
-                4,
-                4
+          // Draw wall slice with fallback
+          if (textures.isLoaded) {
+            const textureX = Math.floor(hitX * TEXTURE_SIZE);
+            ctx.drawImage(
+              textures.wall,
+              textureX,
+              0,
+              1,
+              TEXTURE_SIZE,
+              i * 2,
+              wallTop,
+              2,
+              wallHeight
             );
+          } else {
+            // Fallback rendering with color gradient
+            const shade = Math.min(255, Math.floor(255 - distance * 20));
+            ctx.fillStyle = `rgb(${shade}, ${Math.floor(
+              shade * 0.8
+            )}, ${Math.floor(shade * 0.6)})`;
+            ctx.fillRect(i * 2, wallTop, 2, wallHeight);
+          }
 
-            // Draw player direction on mini-map
-            ctx.strokeStyle = "yellow";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            const arrowLength = keys["w"] ? 10 : keys["s"] ? 6 : 8;
-            const arrowX = player.x * tileSize * mapScale + Math.cos(player.angle) * arrowLength + mapPadding;
-            const arrowY = player.y * tileSize * mapScale + Math.sin(player.angle) * arrowLength + mapPadding;
-            ctx.moveTo(player.x * tileSize * mapScale + mapPadding, player.y * tileSize * mapScale + mapPadding);
-            ctx.lineTo(arrowX, arrowY);
-            ctx.stroke();
+          // Draw floor and ceiling
+          ctx.fillStyle = "#333";
+          ctx.fillRect(i * 2, wallBottom, 2, screenHeight - wallBottom);
+          ctx.fillStyle = "#555";
+          ctx.fillRect(i * 2, 0, 2, wallTop);
 
-            // Draw enemies on mini-map
-            enemies.forEach(enemy => {
-                if (enemy.alive) {
-                    ctx.fillStyle = enemy.type === 'heavy' ? "#ff0000" : "#ff00ff";
-                    ctx.fillRect(
-                        enemy.x * tileSize * mapScale - 2 + mapPadding,
-                        enemy.y * tileSize * mapScale - 2 + mapPadding,
-                        4,
-                        4
-                    );
+          enemies.forEach((enemy) => {
+            if (!enemy.alive) return;
+            const enemyAngle = Math.atan2(
+              enemy.y - player.y,
+              enemy.x - player.x
+            );
+            // Increase the angle threshold for better visibility
+            const angleDiff = Math.abs(
+              ((enemyAngle - rayAngle + Math.PI * 3) % (Math.PI * 2)) - Math.PI
+            );
+            // Increase detection threshold
+            if (angleDiff < 0.05) {
+              // Increased from 0.02
+              const enemyDistance = Math.sqrt(
+                (enemy.x - player.x) ** 2 + (enemy.y - player.y) ** 2
+              );
+              if (enemyDistance < distance) {
+                enemyDistances.push({ enemy, distance: enemyDistance, ray: i });
+              }
+            }
+          });
+        }
+
+        // Sort enemies by distance and render them
+        enemyDistances.sort((a, b) => b.distance - a.distance);
+        enemyDistances.forEach(({ enemy, distance, ray }) => {
+          // Adjust sprite scaling based on distance
+          const minDistance = 1.0; // Minimum rendering distance
+          const adjustedDistance = Math.max(distance, minDistance);
+          const spriteHeight = (screenHeight / adjustedDistance) * 1.5;
+          const spriteWidth = spriteHeight * 0.75;
+          const spriteX = ray * 2 - spriteWidth / 2;
+          const spriteY = (screenHeight - spriteHeight) / 2;
+
+          if (textures.isLoaded) {
+            try {
+              ctx.drawImage(
+                textures.enemy,
+                0,
+                0, // Source X, Y
+                textures.enemy.width,
+                textures.enemy.height, // Source width, height
+                spriteX,
+                spriteY, // Destination X, Y
+                spriteWidth,
+                spriteHeight // Destination width, height
+              );
+            } catch (error) {
+              console.error("Error drawing enemy:", error);
+              // Fallback rendering
+              ctx.fillStyle = "#ff00ff";
+              ctx.fillRect(spriteX, spriteY, spriteWidth, spriteHeight);
+            }
+          } else {
+            // Fallback rendering with more visible color
+            ctx.fillStyle = "#ff00ff";
+            ctx.fillRect(spriteX, spriteY, spriteWidth, spriteHeight);
+          }
+        });
+
+        projectiles.forEach((p) => {
+          const pAngle = Math.atan2(p.y - player.y, p.x - player.x);
+          const angleDiff = Math.abs(pAngle - player.angle);
+          if (angleDiff < player.fov / 2) {
+            const pDistance = Math.sqrt(
+              (p.x - player.x) ** 2 + (p.y - player.y) ** 2
+            );
+            const ray = rayCount * (0.5 + (pAngle - player.angle) / player.fov);
+            const pHeight = (screenHeight / pDistance) * 0.3;
+            const pWidth = pHeight;
+            const pX = ray * 2 - pWidth / 2;
+            const pY = (screenHeight - pHeight) / 2;
+            ctx.fillStyle = "orange";
+            ctx.fillRect(pX, pY, pWidth, pHeight);
+          }
+        });
+      }
+
+      // Add these lines after the keyboard event listeners
+      let isPointerLocked = false;
+
+      // Request pointer lock when clicking on the canvas
+      canvas.addEventListener("click", () => {
+        if (!isPointerLocked) {
+          canvas.requestPointerLock();
+        }
+      });
+
+      // Handle pointer lock state changes
+      document.addEventListener("pointerlockchange", () => {
+        isPointerLocked = document.pointerLockElement === canvas;
+      });
+
+      // Handle mouse movement
+      document.addEventListener("mousemove", (e) => {
+        if (isPointerLocked && player.health > 0) {
+          // Adjust the sensitivity value to make the rotation more or less sensitive
+          const sensitivity = 0.002;
+          player.angle += e.movementX * sensitivity;
+        }
+      });
+
+      // Modify the updatePlayer function to remove keyboard rotation
+      function updatePlayer() {
+        if (player.health <= 0) return; // Don't move if dead
+
+        const isRunning = keys["shift"]; // Check for shift key
+        const currentSpeeds = isRunning
+          ? speeds.player.running
+          : speeds.player.base;
+
+        const cos = Math.cos(player.angle);
+        const sin = Math.sin(player.angle);
+
+        // Forward/Backward with momentum
+        if (keys["w"] || keys["arrowup"]) {
+          const newX = player.x + cos * currentSpeeds.move;
+          const newY = player.y + sin * currentSpeeds.move;
+          // Try to slide along walls when hitting them
+          if (canMove(newX, player.y)) player.x = newX;
+          if (canMove(player.x, newY)) player.y = newY;
+        }
+        if (keys["s"] || keys["arrowdown"]) {
+          const newX = player.x - cos * (currentSpeeds.move * 0.7); // Slower backward movement
+          const newY = player.y - sin * (currentSpeeds.move * 0.7);
+          if (canMove(newX, player.y)) player.x = newX;
+          if (canMove(player.x, newY)) player.y = newY;
+        }
+
+        // Strafe left/right
+        if (keys["q"] || keys["arrowleft"]) {
+          const newX = player.x - sin * currentSpeeds.strafe;
+          const newY = player.y + cos * currentSpeeds.strafe;
+          if (canMove(newX, player.y)) player.x = newX;
+          if (canMove(player.x, newY)) player.y = newY;
+        }
+        if (keys["e"] || keys["arrowright"]) {
+          const newX = player.x + sin * currentSpeeds.strafe;
+          const newY = player.y - cos * currentSpeeds.strafe;
+          if (canMove(newX, player.y)) player.x = newX;
+          if (canMove(player.x, newY)) player.y = newY;
+        }
+
+        // Remove keyboard rotation controls (a/d keys)
+        // The rotation is now handled by mouse movement
+      }
+
+      // Add this function before updateEnemies
+      function hasLineOfSight(fromX, fromY, toX, toY) {
+        const dx = toX - fromX;
+        const dy = toY - fromY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const stepX = dx / distance;
+        const stepY = dy / distance;
+
+        let currentX = fromX;
+        let currentY = fromY;
+
+        // Check for walls along the line of sight
+        for (let step = 0; step < distance; step += 0.1) {
+          currentX = fromX + stepX * step;
+          currentY = fromY + stepY * step;
+
+          // If we hit a wall, there's no line of sight
+          if (map[Math.floor(currentY)][Math.floor(currentX)] === 1) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      // Update enemies and shooting
+      function updateEnemies() {
+        enemies.forEach((enemy) => {
+          if (!enemy.alive) return;
+
+          const dx = player.x - enemy.x;
+          const dy = player.y - enemy.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          const enemySpeed = speeds.enemy[enemy.type].move;
+          const projectileSpeed = speeds.enemy[enemy.type].projectile;
+
+          // Define minimum distances for different enemy types
+          const minDistance = enemy.type === "heavy" ? 2.0 : 1.5;
+
+          // Different behavior based on enemy type
+          if (enemy.type === "soldier") {
+            // Soldiers try to maintain medium distance
+            if (distance > 3 || distance > minDistance) {
+              // Move towards player if too far
+              const moveX = enemy.x + (dx / distance) * enemySpeed;
+              const moveY = enemy.y + (dy / distance) * enemySpeed;
+              if (canMove(moveX, moveY)) {
+                enemy.x = moveX;
+                enemy.y = moveY;
+              }
+            } else if (distance < minDistance) {
+              // Back away if too close
+              const moveX = enemy.x - (dx / distance) * enemySpeed;
+              const moveY = enemy.y - (dy / distance) * enemySpeed;
+              if (canMove(moveX, moveY)) {
+                enemy.x = moveX;
+                enemy.y = moveY;
+              }
+            }
+
+            // Shoot more frequently, but only if there's line of sight
+            if (
+              enemy.shootCooldown <= 0 &&
+              distance < 6 &&
+              hasLineOfSight(enemy.x, enemy.y, player.x, player.y)
+            ) {
+              const angleToPlayer = Math.atan2(dy, dx);
+              projectiles.push({
+                x: enemy.x,
+                y: enemy.y,
+                dx: Math.cos(angleToPlayer) * projectileSpeed,
+                dy: Math.sin(angleToPlayer) * projectileSpeed,
+                damage: 10,
+                type: "soldier",
+              });
+              enemy.shootCooldown = 45;
+            }
+          } else if (enemy.type === "heavy") {
+            // Heavy enemies maintain larger minimum distance
+            if (distance > 3 || distance > minDistance) {
+              const moveX = enemy.x + (dx / distance) * enemySpeed;
+              const moveY = enemy.y + (dy / distance) * enemySpeed;
+              if (canMove(moveX, moveY)) {
+                enemy.x = moveX;
+                enemy.y = moveY;
+              }
+            } else if (distance < minDistance) {
+              // Back away if too close
+              const moveX = enemy.x - (dx / distance) * enemySpeed;
+              const moveY = enemy.y - (dy / distance) * enemySpeed;
+              if (canMove(moveX, moveY)) {
+                enemy.x = moveX;
+                enemy.y = moveY;
+              }
+            }
+
+            // Shoot less frequently but does more damage
+            if (
+              enemy.shootCooldown <= 0 &&
+              distance < 7 &&
+              hasLineOfSight(enemy.x, enemy.y, player.x, player.y)
+            ) {
+              const angleToPlayer = Math.atan2(dy, dx);
+              projectiles.push({
+                x: enemy.x,
+                y: enemy.y,
+                dx: Math.cos(angleToPlayer) * projectileSpeed,
+                dy: Math.sin(angleToPlayer) * projectileSpeed,
+                damage: 20,
+                type: "heavy",
+              });
+              enemy.shootCooldown = 90;
+            }
+          }
+
+          enemy.shootCooldown--;
+        });
+
+        // Update projectiles with damage effect
+        projectiles = projectiles.filter((p) => {
+          p.x += p.dx;
+          p.y += p.dy;
+
+          const distToPlayer = Math.sqrt(
+            (p.x - player.x) ** 2 + (p.y - player.y) ** 2
+          );
+          if (distToPlayer < 0.2 && player.health > 0) {
+            // Play damage sound
+            sounds.damage.currentTime = 0;
+            sounds.damage
+              .play()
+              .catch((error) => console.log("Audio play failed:", error));
+
+            // Set damage flash
+            damageFlashIntensity = 0.8; // Set initial flash intensity
+
+            player.health -= p.damage;
+            if (player.health <= 0) player.health = 0;
+            return false;
+          }
+
+          return (
+            canMove(p.x, p.y) &&
+            p.x >= 0 &&
+            p.x < mapWidth &&
+            p.y >= 0 &&
+            p.y < mapHeight
+          );
+        });
+
+        // Fade out damage flash
+        if (damageFlashIntensity > 0) {
+          damageFlashIntensity -= 0.05; // Adjust this value to control how fast the flash fades
+          if (damageFlashIntensity < 0) damageFlashIntensity = 0;
+        }
+      }
+
+      // Player shooting
+      function shoot() {
+        if (shotFired && player.health > 0) {
+          // Play bullet shot sound
+          sounds.bulletShot.currentTime = 0; // Reset the audio to start
+          sounds.bulletShot
+            .play()
+            .catch((error) => console.log("Audio play failed:", error));
+
+          // Only allow shooting if player is alive
+          // Visual feedback for shooting
+          ctx.fillStyle = "yellow";
+          ctx.fillRect(screenWidth / 2 - 40, screenHeight - 120, 80, 40);
+          ctx.fillStyle = "white";
+          ctx.font = "20px Arial";
+          ctx.fillText("FIRE!", screenWidth / 2 - 25, screenHeight - 90);
+
+          let rayX = player.x;
+          let rayY = player.y;
+          const deltaX = Math.cos(player.angle);
+          const deltaY = Math.sin(player.angle);
+          let hit = false;
+          let rayStep = 0.1; // Smaller step size for more precise hit detection
+          let maxRange = 20; // Maximum shooting range
+
+          // Shoot ray from player position
+          for (let dist = 0; dist < maxRange && !hit; dist += rayStep) {
+            rayX = player.x + deltaX * dist;
+            rayY = player.y + deltaY * dist;
+
+            // Check for wall collision first
+            if (map[Math.floor(rayY)][Math.floor(rayX)] === 1) {
+              break; // Hit a wall, stop checking
+            }
+
+            // Check for enemy hits
+            enemies.forEach((enemy) => {
+              if (!enemy.alive) return;
+
+              // Calculate distance to enemy
+              const dx = enemy.x - rayX;
+              const dy = enemy.y - rayY;
+              const distToEnemy = Math.sqrt(dx * dx + dy * dy);
+
+              // Increased hit box slightly for better hit detection
+              if (distToEnemy < 0.5) {
+                // Increased from 0.3 to 0.5
+                // Hit an enemy!
+                enemy.health -= 50;
+                if (enemy.health <= 0) {
+                  enemy.alive = false;
+                  console.log("Enemy killed!"); // Debug message
+                } else {
+                  console.log("Enemy hit! Health:", enemy.health); // Debug message
                 }
-            });
+                hit = true;
 
-            // Draw projectiles on mini-map
-            projectiles.forEach(p => {
-                ctx.fillStyle = "orange";
-                ctx.fillRect(
-                    p.x * tileSize * mapScale - 2 + mapPadding,
-                    p.y * tileSize * mapScale - 2 + mapPadding,
-                    4,
-                    4
-                );
-            });
-
-            // Draw health and stats on the right
-            const statsX = screenWidth - 210; // Position from right edge
-            const statsY = 10; // Position from top
-            const statsPadding = 20; // Spacing between elements
-
-            // Draw health bar background
-            ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-            ctx.fillRect(statsX, statsY, 200, 150);
-
-            // Draw health bar
-            ctx.fillStyle = "gray";
-            ctx.fillRect(statsX + 5, statsY + 5, 190, 30);
-            ctx.fillStyle = player.health > 50 ? "green" : player.health > 20 ? "yellow" : "red";
-            ctx.fillRect(statsX + 5, statsY + 5, (player.health / 100) * 190, 30);
-
-            // Draw text information
-            ctx.fillStyle = "white";
-            ctx.font = "20px Arial";
-            ctx.textAlign = "left";
-            ctx.fillText(`Health: ${Math.floor(player.health)}`, statsX + 10, statsY + 27);
-            
-            // Add more stats
-            ctx.fillText(`Enemies Left: ${enemies.filter(e => e.alive).length}`, statsX + 10, statsY + 27 + statsPadding * 2);
-            ctx.fillText(`Position: ${Math.floor(player.x)},${Math.floor(player.y)}`, statsX + 10, statsY + 27 + statsPadding * 3);
-            ctx.fillText("Click to shoot!", statsX + 10, statsY + 27 + statsPadding * 4);
-
-            // Add speed indicator
-            const speedState = keys["Shift"] ? "Running" : "Walking";
-            ctx.fillText(`Speed: ${speedState}`, statsX + 10, statsY + 27 + statsPadding * 5);
-
-            // Game over message in center
-            if (player.health <= 0) {
+                // Visual feedback for hit
                 ctx.fillStyle = "red";
-                ctx.font = "40px Arial";
-                ctx.textAlign = "center";
-                ctx.fillText("GAME OVER", screenWidth / 2, screenHeight / 2);
-            }
+                const spriteHeight = (screenHeight / distToEnemy) * 1.5;
+                const spriteWidth = spriteHeight * 0.75;
+                const spriteX = (rayCount / 2) * 2 - spriteWidth / 2;
+                const spriteY = (screenHeight - spriteHeight) / 2;
+                ctx.fillRect(spriteX, spriteY, spriteWidth, spriteHeight);
+              }
+            });
+          }
 
-            if (keys['Tab']) {  // Hold Tab to see debug info
-                // Draw debug information
-                ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-                ctx.fillRect(10, screenHeight - 100, 200, 90);
-                ctx.fillStyle = "white";
-                ctx.font = "14px Arial";
-                ctx.textAlign = "left";
-                ctx.fillText(`Player Angle: ${(player.angle * 180 / Math.PI).toFixed(2)}°`, 20, screenHeight - 80);
-                ctx.fillText(`Last Shot: ${Date.now() - weaponState.lastShot}ms ago`, 20, screenHeight - 60);
-                ctx.fillText(`Enemies in range: ${enemies.filter(e => {
-                    if (!e.alive) return false;
-                    const dx = e.x - player.x;
-                    const dy = e.y - player.y;
-                    return Math.sqrt(dx * dx + dy * dy) < 6;
-                }).length}`, 20, screenHeight - 40);
-            }
+          // Draw the bullet trail for visual feedback
+          ctx.strokeStyle = "yellow";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(screenWidth / 2, screenHeight - 100); // Start from weapon position
+          ctx.lineTo(screenWidth / 2 + (hit ? 0 : 50), screenHeight - 150); // Show trajectory
+          ctx.stroke();
+
+          // Weapon state update
+          weaponState.current = "shooting";
+          weaponState.shootingFrame = 10;
+          weaponState.lastShot = Date.now();
+
+          shotFired = false;
+        }
+      }
+
+      // Draw HUD
+      function drawHUD() {
+        // Draw mini-map on the left
+        const mapScale = 1; // Adjust this value to change mini-map size
+        const mapPadding = 10; // Space from the edge of the screen
+
+        // Draw map background
+        ctx.fillStyle = "rgba(0, 0, 0, 0.5)"; // Semi-transparent background
+        ctx.fillRect(
+          mapPadding,
+          mapPadding,
+          mapWidth * tileSize * mapScale,
+          mapHeight * tileSize * mapScale
+        );
+
+        // Draw map walls and spaces
+        for (let y = 0; y < mapHeight; y++) {
+          for (let x = 0; x < mapWidth; x++) {
+            ctx.fillStyle = map[y][x] === 1 ? "#000" : "#fff";
+            ctx.fillRect(
+              x * tileSize * mapScale + mapPadding,
+              y * tileSize * mapScale + mapPadding,
+              tileSize * mapScale,
+              tileSize * mapScale
+            );
+          }
         }
 
-        // Add this function to draw the weapon
-        function drawWeapon() {
-            const weaponScale = 0.7; // Adjust scale of weapon on screen
-            const weaponWidth = screenWidth * 0.8 * weaponScale;
-            const weaponHeight = screenHeight * 0.4 * weaponScale;
-            const weaponX = (screenWidth - weaponWidth) / 2;
-            let weaponY = screenHeight - weaponHeight; // Changed from const to let
+        // Draw player on mini-map
+        ctx.fillStyle = "red";
+        ctx.fillRect(
+          player.x * tileSize * mapScale - 2 + mapPadding,
+          player.y * tileSize * mapScale - 2 + mapPadding,
+          4,
+          4
+        );
 
-            let currentWeaponTexture = textures.weaponIdle;
+        // Draw player direction on mini-map
+        ctx.strokeStyle = "yellow";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        const arrowLength = keys["w"] ? 10 : keys["s"] ? 6 : 8;
+        const arrowX =
+          player.x * tileSize * mapScale +
+          Math.cos(player.angle) * arrowLength +
+          mapPadding;
+        const arrowY =
+          player.y * tileSize * mapScale +
+          Math.sin(player.angle) * arrowLength +
+          mapPadding;
+        ctx.moveTo(
+          player.x * tileSize * mapScale + mapPadding,
+          player.y * tileSize * mapScale + mapPadding
+        );
+        ctx.lineTo(arrowX, arrowY);
+        ctx.stroke();
 
-            // Update weapon state based on player actions
-            if (shotFired) {
-                weaponState.current = 'shooting';
-                weaponState.shootingFrame = 10; // Duration of shooting animation
-                weaponState.lastShot = Date.now();
-                currentWeaponTexture = textures.weaponShooting;
-            } else if (keys['w'] || keys['s'] || keys['a'] || keys['d']) {
-                weaponState.current = 'running';
-                currentWeaponTexture = textures.weaponRunning;
-                // Add bobbing effect while running
-                const bobAmount = Math.sin(Date.now() * 0.01) * 10;
-                weaponY += bobAmount; // Now this will work since weaponY is a let
-            } else if (Date.now() - weaponState.lastShot > 200) { // Reset to idle after shooting
-                weaponState.current = 'idle';
-                currentWeaponTexture = textures.weaponIdle;
-            }
+        // Draw enemies on mini-map
+        enemies.forEach((enemy) => {
+          if (enemy.alive) {
+            ctx.fillStyle = enemy.type === "heavy" ? "#ff0000" : "#ff00ff";
+            ctx.fillRect(
+              enemy.x * tileSize * mapScale - 2 + mapPadding,
+              enemy.y * tileSize * mapScale - 2 + mapPadding,
+              4,
+              4
+            );
+          }
+        });
 
-            // Draw the weapon
-            if (textures.isLoaded) {
-                ctx.drawImage(
-                    currentWeaponTexture,
-                    0, 0,
-                    currentWeaponTexture.width, currentWeaponTexture.height,
-                    weaponX, weaponY,
-                    weaponWidth, weaponHeight
-                );
+        // Draw projectiles on mini-map
+        projectiles.forEach((p) => {
+          ctx.fillStyle = "orange";
+          ctx.fillRect(
+            p.x * tileSize * mapScale - 2 + mapPadding,
+            p.y * tileSize * mapScale - 2 + mapPadding,
+            4,
+            4
+          );
+        });
 
-                // Draw muzzle flash/explosion when shooting
-                if (weaponState.current === 'shooting' && weaponState.shootingFrame > 0) {
-                    const flashSize = 100;
-                    ctx.drawImage(
-                        textures.explosion,
-                        0, 0,
-                        textures.explosion.width, textures.explosion.height,
-                        weaponX + weaponWidth * 0.7, // Position the flash at the weapon's muzzle
-                        weaponY - flashSize/2,
-                        flashSize, flashSize
-                    );
-                    weaponState.shootingFrame--;
-                }
-            }
+        // Draw health and stats on the right
+        const statsX = screenWidth - 210; // Position from right edge
+        const statsY = 10; // Position from top
+        const statsPadding = 20; // Spacing between elements
+
+        // Draw health bar background
+        ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
+        ctx.fillRect(statsX, statsY, 200, 150);
+
+        // Draw health bar
+        ctx.fillStyle = "gray";
+        ctx.fillRect(statsX + 5, statsY + 5, 190, 30);
+        ctx.fillStyle =
+          player.health > 50 ? "green" : player.health > 20 ? "yellow" : "red";
+        ctx.fillRect(statsX + 5, statsY + 5, (player.health / 100) * 190, 30);
+
+        // Draw text information
+        ctx.fillStyle = "white";
+        ctx.font = "20px Arial";
+        ctx.textAlign = "left";
+        ctx.fillText(
+          `Health: ${Math.floor(player.health)}`,
+          statsX + 10,
+          statsY + 27
+        );
+
+        // Add more stats
+        ctx.fillText(
+          `Enemies Left: ${enemies.filter((e) => e.alive).length}`,
+          statsX + 10,
+          statsY + 27 + statsPadding * 2
+        );
+        ctx.fillText(
+          `Position: ${Math.floor(player.x)},${Math.floor(player.y)}`,
+          statsX + 10,
+          statsY + 27 + statsPadding * 3
+        );
+        ctx.fillText(
+          "Click to shoot!",
+          statsX + 10,
+          statsY + 27 + statsPadding * 4
+        );
+
+        // Add speed indicator
+        const speedState = keys["Shift"] ? "Running" : "Walking";
+        ctx.fillText(
+          `Speed: ${speedState}`,
+          statsX + 10,
+          statsY + 27 + statsPadding * 5
+        );
+
+        // Game over message in center
+        if (player.health <= 0) {
+          ctx.fillStyle = "red";
+          ctx.font = "40px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText("GAME OVER", screenWidth / 2, screenHeight / 2);
         }
 
-        // Game loop
-        function gameLoop() {
-            ctx.clearRect(0, 0, screenWidth, screenHeight);
+        if (keys["Tab"]) {
+          // Hold Tab to see debug info
+          // Draw debug information
+          ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+          ctx.fillRect(10, screenHeight - 100, 200, 90);
+          ctx.fillStyle = "white";
+          ctx.font = "14px Arial";
+          ctx.textAlign = "left";
+          ctx.fillText(
+            `Player Angle: ${((player.angle * 180) / Math.PI).toFixed(2)}°`,
+            20,
+            screenHeight - 80
+          );
+          ctx.fillText(
+            `Last Shot: ${Date.now() - weaponState.lastShot}ms ago`,
+            20,
+            screenHeight - 60
+          );
+          ctx.fillText(
+            `Enemies in range: ${
+              enemies.filter((e) => {
+                if (!e.alive) return false;
+                const dx = e.x - player.x;
+                const dy = e.y - player.y;
+                return Math.sqrt(dx * dx + dy * dy) < 6;
+              }).length
+            }`,
+            20,
+            screenHeight - 40
+          );
+        }
+      }
 
-            updatePlayer();
-            updateEnemies();
-            castRays();
-            shoot();
-            drawHUD();
-            drawWeapon();
+      // Add this function to draw the weapon
+      function drawWeapon() {
+        const weaponScale = 0.7; // Adjust scale of weapon on screen
+        const weaponWidth = screenWidth * 0.8 * weaponScale;
+        const weaponHeight = screenHeight * 0.4 * weaponScale;
+        const weaponX = (screenWidth - weaponWidth) / 2;
+        let weaponY = screenHeight - weaponHeight; // Changed from const to let
 
-            // Mini-map with direction
-            for (let y = 0; y < mapHeight; y++) {
-                for (let x = 0; x < mapWidth; x++) {
-                    ctx.fillStyle = map[y][x] === 1 ? "#000" : "#fff";
-                    ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-                }
-            }
-            // Player position
+        let currentWeaponTexture = textures.weaponIdle;
+
+        // Update weapon state based on player actions
+        if (shotFired) {
+          weaponState.current = "shooting";
+          weaponState.shootingFrame = 10; // Duration of shooting animation
+          weaponState.lastShot = Date.now();
+          currentWeaponTexture = textures.weaponShooting;
+        } else if (keys["w"] || keys["s"] || keys["a"] || keys["d"]) {
+          weaponState.current = "running";
+          currentWeaponTexture = textures.weaponRunning;
+          // Add bobbing effect while running
+          const bobAmount = Math.sin(Date.now() * 0.01) * 10;
+          weaponY += bobAmount; // Now this will work since weaponY is a let
+        } else if (Date.now() - weaponState.lastShot > 200) {
+          // Reset to idle after shooting
+          weaponState.current = "idle";
+          currentWeaponTexture = textures.weaponIdle;
+        }
+
+        // Draw the weapon
+        if (textures.isLoaded) {
+          ctx.drawImage(
+            currentWeaponTexture,
+            0,
+            0,
+            currentWeaponTexture.width,
+            currentWeaponTexture.height,
+            weaponX,
+            weaponY,
+            weaponWidth,
+            weaponHeight
+          );
+
+          // Draw muzzle flash/explosion when shooting
+          if (
+            weaponState.current === "shooting" &&
+            weaponState.shootingFrame > 0
+          ) {
+            const flashSize = 100;
+            ctx.drawImage(
+              textures.explosion,
+              0,
+              0,
+              textures.explosion.width,
+              textures.explosion.height,
+              weaponX + weaponWidth * 0.7, // Position the flash at the weapon's muzzle
+              weaponY - flashSize / 2,
+              flashSize,
+              flashSize
+            );
+            weaponState.shootingFrame--;
+          }
+        }
+      }
+
+      // Game loop
+      function gameLoop() {
+        ctx.clearRect(0, 0, screenWidth, screenHeight);
+
+        updatePlayer();
+        updateEnemies();
+        castRays();
+        shoot();
+        drawHUD();
+        drawWeapon();
+
+        // Mini-map with direction
+        for (let y = 0; y < mapHeight; y++) {
+          for (let x = 0; x < mapWidth; x++) {
+            ctx.fillStyle = map[y][x] === 1 ? "#000" : "#fff";
+            ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+          }
+        }
+        // Player position
+        ctx.fillStyle = "blue";
+        ctx.fillRect(player.x * tileSize - 2, player.y * tileSize - 2, 4, 4);
+
+        // Direction arrow
+        ctx.strokeStyle = "yellow";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        const arrowLength = keys["w"] ? 10 : keys["s"] ? 6 : 8; // Longer when moving forward, shorter backward
+        const arrowX =
+          player.x * tileSize + Math.cos(player.angle) * arrowLength;
+        const arrowY =
+          player.y * tileSize + Math.sin(player.angle) * arrowLength;
+        ctx.moveTo(player.x * tileSize, player.y * tileSize);
+        ctx.lineTo(arrowX, arrowY);
+        ctx.stroke();
+
+        // Enemies and projectiles
+        enemies.forEach((enemy) => {
+          if (enemy.alive) {
             ctx.fillStyle = "red";
-            ctx.fillRect(player.x * tileSize - 2, player.y * tileSize - 2, 4, 4);
+            ctx.fillRect(enemy.x * tileSize - 2, enemy.y * tileSize - 2, 4, 4);
+          }
+        });
+        projectiles.forEach((p) => {
+          ctx.fillStyle = "orange";
+          ctx.fillRect(p.x * tileSize - 2, p.y * tileSize - 2, 4, 4);
+        });
 
-            // Direction arrow
-            ctx.strokeStyle = "yellow";
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            const arrowLength = keys["w"] ? 10 : keys["s"] ? 6 : 8; // Longer when moving forward, shorter backward
-            const arrowX = player.x * tileSize + Math.cos(player.angle) * arrowLength;
-            const arrowY = player.y * tileSize + Math.sin(player.angle) * arrowLength;
-            ctx.moveTo(player.x * tileSize, player.y * tileSize);
-            ctx.lineTo(arrowX, arrowY);
-            ctx.stroke();
-
-            // Enemies and projectiles
-            enemies.forEach(enemy => {
-                if (enemy.alive) {
-                    ctx.fillStyle = "#ff00ff";
-                    ctx.fillRect(enemy.x * tileSize - 2, enemy.y * tileSize - 2, 4, 4);
-                }
-            });
-            projectiles.forEach(p => {
-                ctx.fillStyle = "orange";
-                ctx.fillRect(p.x * tileSize - 2, p.y * tileSize - 2, 4, 4);
-            });
-
-            requestAnimationFrame(gameLoop);
+        // Draw damage flash effect
+        if (damageFlashIntensity > 0) {
+          ctx.fillStyle = `rgba(255, 0, 0, ${damageFlashIntensity})`;
+          ctx.fillRect(0, 0, screenWidth, screenHeight);
         }
 
-        // Update texture loading handlers
-        textures.weaponIdle.onload = handleTextureLoad;
-        textures.weaponRunning.onload = handleTextureLoad;
-        textures.weaponShooting.onload = handleTextureLoad;
-        textures.explosion.onload = handleTextureLoad;
-        textures.weaponIdle.onerror = (err) => console.error('Error loading weapon idle texture:', err);
-        textures.weaponRunning.onerror = (err) => console.error('Error loading weapon running texture:', err);
-        textures.weaponShooting.onerror = (err) => console.error('Error loading weapon shooting texture:', err);
-        textures.explosion.onerror = (err) => console.error('Error loading explosion texture:', err);
+        requestAnimationFrame(gameLoop);
+      }
+
+      // Update texture loading handlers
+      textures.weaponIdle.onload = handleTextureLoad;
+      textures.weaponRunning.onload = handleTextureLoad;
+      textures.weaponShooting.onload = handleTextureLoad;
+      textures.explosion.onload = handleTextureLoad;
+      textures.weaponIdle.onerror = (err) =>
+        console.error("Error loading weapon idle texture:", err);
+      textures.weaponRunning.onerror = (err) =>
+        console.error("Error loading weapon running texture:", err);
+      textures.weaponShooting.onerror = (err) =>
+        console.error("Error loading weapon shooting texture:", err);
+      textures.explosion.onerror = (err) =>
+        console.error("Error loading explosion texture:", err);
     </script>
-</body>
+  </body>
 </html>
