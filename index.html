@@ -149,6 +149,12 @@
       const rayCount = screenWidth / 2;
       const tileSize = 15; // Moved this up from bottom
 
+      // Add these performance optimization variables at the top with other constants
+      const RENDER_DISTANCE = 20; // Maximum render distance
+      const RAY_STEP = 0.05; // Ray step size
+      const TEXTURE_QUALITY = 2; // Texture rendering quality (higher = lower quality but better performance)
+      const CEILING_RENDER_QUALITY = 4; // Ceiling rendering quality (higher = lower quality but better performance)
+
       // Keyboard controls
       const keys = {};
       document.addEventListener("keydown", (e) => {
@@ -188,6 +194,7 @@
         weaponRunning: new Image(),
         weaponShooting: new Image(),
         explosion: new Image(),
+        ceiling: new Image(),
         isLoaded: false,
       };
 
@@ -216,7 +223,7 @@
 
       // Update the texture loading logic to wait for both textures
       let texturesLoaded = 0;
-      const totalTextures = 6;
+      const totalTextures = 7;
 
       function handleTextureLoad() {
         texturesLoaded++;
@@ -274,28 +281,31 @@
       // Raycasting with enemy rendering
       function castRays() {
         const enemyDistances = [];
-        for (let i = 0; i < rayCount; i++) {
+
+        // Only render every nth ray for better performance
+        for (let i = 0; i < rayCount; i += TEXTURE_QUALITY) {
           const rayAngle =
             player.angle - player.fov / 2 + (player.fov * i) / rayCount;
           let distance = 0;
           let hit = false;
           let rayX = player.x;
           let rayY = player.y;
-          let hitX = 0; // Where exactly on the wall we hit
+          let hitX = 0;
 
           const deltaX = Math.cos(rayAngle);
           const deltaY = Math.sin(rayAngle);
 
-          while (!hit && distance < 20) {
-            distance += 0.05;
+          // Optimize ray casting
+          while (!hit && distance < RENDER_DISTANCE) {
+            distance += RAY_STEP;
             rayX = player.x + deltaX * distance;
             rayY = player.y + deltaY * distance;
 
             if (rayX < 0 || rayX >= mapWidth || rayY < 0 || rayY >= mapHeight) {
               hit = true;
+              distance = RENDER_DISTANCE;
             } else if (map[Math.floor(rayY)][Math.floor(rayX)] === 1) {
               hit = true;
-              // Calculate exact hit position for texture mapping
               hitX = rayX % 1;
               if (Math.abs(rayY - Math.floor(rayY)) < 0.01) {
                 hitX = rayX % 1;
@@ -311,7 +321,48 @@
           const wallTop = (screenHeight - wallHeight) / 2;
           const wallBottom = wallTop + wallHeight;
 
-          // Draw wall slice with fallback
+          // Optimize ceiling rendering
+          if (textures.isLoaded) {
+            // Render ceiling with reduced quality
+            for (let y = 0; y < wallTop; y += CEILING_RENDER_QUALITY) {
+              const rayDir = {
+                x: deltaX,
+                y: deltaY,
+                z: 0.5 - y / screenHeight,
+              };
+              const dist = 0.5 / rayDir.z;
+
+              const tx = (player.x + rayDir.x * dist) % 1;
+              const ty = (player.y + rayDir.y * dist) % 1;
+
+              try {
+                ctx.drawImage(
+                  textures.ceiling,
+                  tx * TEXTURE_SIZE,
+                  ty * TEXTURE_SIZE,
+                  1,
+                  1,
+                  i * 2,
+                  y,
+                  2 * TEXTURE_QUALITY,
+                  CEILING_RENDER_QUALITY
+                );
+              } catch (error) {
+                ctx.fillStyle = "#555";
+                ctx.fillRect(
+                  i * 2,
+                  y,
+                  2 * TEXTURE_QUALITY,
+                  CEILING_RENDER_QUALITY
+                );
+              }
+            }
+          } else {
+            ctx.fillStyle = "#555";
+            ctx.fillRect(i * 2, 0, 2 * TEXTURE_QUALITY, wallTop);
+          }
+
+          // Optimize wall rendering
           if (textures.isLoaded) {
             const textureX = Math.floor(hitX * TEXTURE_SIZE);
             ctx.drawImage(
@@ -322,52 +373,57 @@
               TEXTURE_SIZE,
               i * 2,
               wallTop,
-              2,
+              2 * TEXTURE_QUALITY,
               wallHeight
             );
           } else {
-            // Fallback rendering with color gradient
             const shade = Math.min(255, Math.floor(255 - distance * 20));
             ctx.fillStyle = `rgb(${shade}, ${Math.floor(
               shade * 0.8
             )}, ${Math.floor(shade * 0.6)})`;
-            ctx.fillRect(i * 2, wallTop, 2, wallHeight);
+            ctx.fillRect(i * 2, wallTop, 2 * TEXTURE_QUALITY, wallHeight);
           }
 
-          // Draw floor and ceiling
+          // Optimize floor rendering
           ctx.fillStyle = "#333";
-          ctx.fillRect(i * 2, wallBottom, 2, screenHeight - wallBottom);
-          ctx.fillStyle = "#555";
-          ctx.fillRect(i * 2, 0, 2, wallTop);
+          ctx.fillRect(
+            i * 2,
+            wallBottom,
+            2 * TEXTURE_QUALITY,
+            screenHeight - wallBottom
+          );
 
-          enemies.forEach((enemy) => {
-            if (!enemy.alive) return;
-            const enemyAngle = Math.atan2(
-              enemy.y - player.y,
-              enemy.x - player.x
-            );
-            // Increase the angle threshold for better visibility
-            const angleDiff = Math.abs(
-              ((enemyAngle - rayAngle + Math.PI * 3) % (Math.PI * 2)) - Math.PI
-            );
-            // Increase detection threshold
-            if (angleDiff < 0.05) {
-              // Increased from 0.02
-              const enemyDistance = Math.sqrt(
-                (enemy.x - player.x) ** 2 + (enemy.y - player.y) ** 2
+          // Collect enemy distances less frequently
+          if (i % (TEXTURE_QUALITY * 2) === 0) {
+            enemies.forEach((enemy) => {
+              if (!enemy.alive) return;
+              const enemyAngle = Math.atan2(
+                enemy.y - player.y,
+                enemy.x - player.x
               );
-              if (enemyDistance < distance) {
-                enemyDistances.push({ enemy, distance: enemyDistance, ray: i });
+              const angleDiff = Math.abs(
+                ((enemyAngle - rayAngle + Math.PI * 3) % (Math.PI * 2)) -
+                  Math.PI
+              );
+              if (angleDiff < 0.05) {
+                const enemyDistance = Math.sqrt(
+                  (enemy.x - player.x) ** 2 + (enemy.y - player.y) ** 2
+                );
+                if (enemyDistance < distance) {
+                  enemyDistances.push({
+                    enemy,
+                    distance: enemyDistance,
+                    ray: i,
+                  });
+                }
               }
-            }
-          });
+            });
+          }
         }
 
-        // Sort enemies by distance and render them
-        enemyDistances.sort((a, b) => b.distance - a.distance);
+        // Optimize enemy rendering
         enemyDistances.forEach(({ enemy, distance, ray }) => {
-          // Adjust sprite scaling based on distance
-          const minDistance = 1.0; // Minimum rendering distance
+          const minDistance = 1.0;
           const adjustedDistance = Math.max(distance, minDistance);
           const spriteHeight = (screenHeight / adjustedDistance) * 1.5;
           const spriteWidth = spriteHeight * 0.75;
@@ -379,22 +435,19 @@
               ctx.drawImage(
                 textures.enemy,
                 0,
-                0, // Source X, Y
+                0,
                 textures.enemy.width,
-                textures.enemy.height, // Source width, height
+                textures.enemy.height,
                 spriteX,
-                spriteY, // Destination X, Y
+                spriteY,
                 spriteWidth,
-                spriteHeight // Destination width, height
+                spriteHeight
               );
             } catch (error) {
-              console.error("Error drawing enemy:", error);
-              // Fallback rendering
               ctx.fillStyle = "#ff00ff";
               ctx.fillRect(spriteX, spriteY, spriteWidth, spriteHeight);
             }
           } else {
-            // Fallback rendering with more visible color
             ctx.fillStyle = "#ff00ff";
             ctx.fillRect(spriteX, spriteY, spriteWidth, spriteHeight);
           }
@@ -1034,6 +1087,48 @@
         console.error("Error loading weapon shooting texture:", err);
       textures.explosion.onerror = (err) =>
         console.error("Error loading explosion texture:", err);
+
+      // Create a simple ceiling texture using canvas (after the wall texture creation)
+      const ceilingCanvas = document.createElement("canvas");
+      ceilingCanvas.width = TEXTURE_SIZE;
+      ceilingCanvas.height = TEXTURE_SIZE;
+      const ceilingCtx = ceilingCanvas.getContext("2d");
+
+      // Create a basic ceiling pattern
+      ceilingCtx.fillStyle = "#4a4a4a"; // Base dark gray
+      ceilingCtx.fillRect(0, 0, TEXTURE_SIZE, TEXTURE_SIZE);
+
+      // Add some texture details
+      ceilingCtx.fillStyle = "#3a3a3a"; // Slightly darker gray
+      for (let y = 0; y < TEXTURE_SIZE; y += 8) {
+        for (let x = 0; x < TEXTURE_SIZE; x += 8) {
+          if ((x + y) % 16 === 0) {
+            ceilingCtx.fillRect(x, y, 8, 8);
+          }
+        }
+      }
+
+      // Add subtle grid lines
+      ceilingCtx.strokeStyle = "#555555";
+      ceilingCtx.lineWidth = 1;
+      for (let i = 0; i < TEXTURE_SIZE; i += 16) {
+        ceilingCtx.beginPath();
+        ceilingCtx.moveTo(0, i);
+        ceilingCtx.lineTo(TEXTURE_SIZE, i);
+        ceilingCtx.stroke();
+        ceilingCtx.beginPath();
+        ceilingCtx.moveTo(i, 0);
+        ceilingCtx.lineTo(i, TEXTURE_SIZE);
+        ceilingCtx.stroke();
+      }
+
+      // Load the ceiling texture
+      textures.ceiling.src = ceilingCanvas.toDataURL();
+
+      // Update the texture loading logic
+      textures.ceiling.onload = handleTextureLoad;
+      textures.ceiling.onerror = (err) =>
+        console.error("Error loading ceiling texture:", err);
     </script>
   </body>
 </html>
