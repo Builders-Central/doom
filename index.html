@@ -139,15 +139,15 @@
       };
 
       // Adjust game settings for the larger map
-      const moveSpeed = 0.08; // Slightly faster movement
+      const moveSpeed = 0.04;
       const rotSpeed = 0.04;
-      const strafeSpeed = 0.08;
-      const enemySpeed = 0.03; // Slightly faster enemies
-      const projectileSpeed = 0.2;
+      const strafeSpeed = 0.04;
+      const enemySpeed = 0.02;
+      const projectileSpeed = 0.15;
       const screenWidth = canvas.width;
       const screenHeight = canvas.height;
       const rayCount = screenWidth / 2;
-      const tileSize = 15; // Moved this up from bottom
+      const tileSize = 15;
 
       // Add these performance optimization variables at the top with other constants
       const RENDER_DISTANCE = 20; // Maximum render distance
@@ -523,21 +523,18 @@
         }
 
         // Strafe left/right
-        if (keys["q"] || keys["arrowleft"]) {
+        if (keys["d"] || keys["arrowleft"]) {
           const newX = player.x - sin * currentSpeeds.strafe;
           const newY = player.y + cos * currentSpeeds.strafe;
           if (canMove(newX, player.y)) player.x = newX;
           if (canMove(player.x, newY)) player.y = newY;
         }
-        if (keys["e"] || keys["arrowright"]) {
+        if (keys["a"] || keys["arrowright"]) {
           const newX = player.x + sin * currentSpeeds.strafe;
           const newY = player.y - cos * currentSpeeds.strafe;
           if (canMove(newX, player.y)) player.x = newX;
           if (canMove(player.x, newY)) player.y = newY;
         }
-
-        // Remove keyboard rotation controls (a/d keys)
-        // The rotation is now handled by mouse movement
       }
 
       // Add this function before updateEnemies
@@ -1008,7 +1005,7 @@
               0,
               textures.explosion.width,
               textures.explosion.height,
-              weaponX + weaponWidth * 0.7, // Position the flash at the weapon's muzzle
+              weaponX + weaponWidth * 0.43, // Position the flash at the weapon's muzzle
               weaponY - flashSize / 2,
               flashSize,
               flashSize
